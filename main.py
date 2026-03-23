@@ -79,8 +79,14 @@ last_msg_id = None  # store msg id
 @bot.event
 async def on_voice_state_update(member, before, after):
     global last_msg_id
-    if after.channel and after.channel.id == TARGET_VC_ID:
-        if len(after.channel.members) == 1:
+
+    if after.channel:
+        # if activity to the same channel -> ignore mute, unmute, etc.
+        if before.channel == after.channel:
+            return
+
+        # if someone joins the voice channel -> send message
+        if after.channel.id == TARGET_VC_ID and len(after.channel.members) == 1:
             text_channel = bot.get_channel(TEXT_CH_ID)
             if text_channel:
                 embed = discord.Embed(description=embed_msg, color=discord.Color.green())
