@@ -20,6 +20,7 @@ intents.voice_states = True
 intents.message_content = True
 intents.reactions = True
 intents.presences = True
+intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # emojis
