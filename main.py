@@ -112,7 +112,7 @@ async def on_voice_state_update(member, before, after):
 
                 # new session
                 if len(after.channel.members) == 1:
-                    other_online_members = [m.name for m in member.guild.members if m.status != discord.Status.offline and m.name != member.name]
+                    other_online_members = [m.name for m in member.guild.members if m.status == discord.Status.online and m.name != member.name]
 
                     if len(other_online_members) == 0:
                         title = f"EMERGENCY WAR ROOM\n(Organiser: {member.display_name})"
