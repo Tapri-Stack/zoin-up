@@ -149,10 +149,10 @@ async def on_voice_state_update(member, before, after):
                     other_online_members = [m.name for m in member.guild.members if m.status != discord.Status.offline and m.name != member.name]
 
                     if len(other_online_members) == 0:
-                        title = f"Emergency war room (Organiser: {member.display_name})"
+                        title = f"EMERGENCY WAR ROOM.\nOrganiser: {member.display_name}"
                         color = discord.Color.red()
                     else:
-                        title = f"Standup in progress (Manager: {manager_display_name})"
+                        title = f"Standup in progress.\nManager: {manager_display_name}"
                         color = discord.Color.green()
 
                     # if manager not starting the meeting
@@ -161,7 +161,7 @@ async def on_voice_state_update(member, before, after):
                     else:
                         session_log += f"{manager_display_name}: (passive aggressive) Team, please join the huddle."
 
-                    session_log += f"{member.display_name} joined."
+                    session_log += f"\n{member.display_name} joined the call."
 
                     embed = discord.Embed(title=title, description=embed_msg, color=color)
                     embed.set_footer(text=session_log)
