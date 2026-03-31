@@ -109,8 +109,6 @@ async def on_voice_state_update(member, before, after):
             # if someone joins the voice channel -> send message
             if after.channel.id == TARGET_VC_ID:
 
-                attendees.add(member)
-
                 # new session
                 if len(after.channel.members) == 1:
                     other_online_members = [m.name for m in member.guild.members if m.status != discord.Status.offline and m.name != member.name]
@@ -142,8 +140,12 @@ async def on_voice_state_update(member, before, after):
 
                 # existing session
                 elif last_msg_id:
-                    session_log += f"\n{member.display_name} joined the call."
-                    await update_log_embed(text_channel, title, embed_msg, color, session_log)
+                    # if new member joining
+                    if member not in attendees:
+                        session_log += f"\n{member.display_name} joined the call."
+                        await update_log_embed(text_channel, title, embed_msg, color, session_log)
+
+                attendees.add(member)
 
         # someone leaves
         elif before.channel and before.channel.id == TARGET_VC_ID:
