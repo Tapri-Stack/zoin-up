@@ -3,6 +3,7 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+import random
 
 # env
 load_dotenv()
@@ -10,17 +11,20 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 TARGET_VC_ID = int(os.getenv("TARGET_VC_ID"))
 TEXT_CH_ID = int(os.getenv("TEXT_CH_ID"))
 GAMER_ROLE_ID = int(os.getenv("GAMER_ROLE_ID"))
+DUMLUCK_USER_ID = int(os.getenv("DUMLUCK_USER_ID"))
+ACK_EMOJI_ID = int(os.getenv("ACK_EMOJI_ID"))
 
 # bot init
 intents = discord.Intents.default()
 intents.voice_states = True
 intents.message_content = True
 intents.reactions = True
+intents.presences = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # emojis
-NICE_YUDI_EMOJI = "<:niceyudi:1468916522033352746>"
-NICE_YUDI_EMOJI_NAME = "niceyudi"
+ACK_EMOJI_NAME = "ack"
+ACK_EMOJI = f"<:{ACK_EMOJI_NAME}:{ACK_EMOJI_ID}>"
 
 
 # create msg
@@ -73,32 +77,96 @@ embed_msg = f"""```
 mention = f"<@&{GAMER_ROLE_ID}>"
 
 
-last_msg_id = None  # store msg id
+last_msg_id = None
+session_log = ""
+title = ""
+color = None
+first_to_leave = True
+attendees = set()
 
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    global last_msg_id
+    global last_msg_id, session_log, title, color, first_to_leave, attendees
 
-    if after.channel:
-        # if activity to the same channel -> ignore mute, unmute, etc.
-        if before.channel == after.channel:
-            return
+    manager_display_name = member.guild.get_member(DUMLUCK_USER_ID).display_name
 
-        # if someone joins the voice channel -> send message
-        if after.channel.id == TARGET_VC_ID and len(after.channel.members) == 1:
-            text_channel = bot.get_channel(TEXT_CH_ID)
-            if text_channel:
-                embed = discord.Embed(description=embed_msg, color=discord.Color.green())
-                embed.set_footer(text=f"{member.display_name} has started the session.")
+    text_channel = bot.get_channel(TEXT_CH_ID)
+    if text_channel:
 
-                msg = await text_channel.send(content=mention, embed=embed)
-                try:
-                    await msg.add_reaction(NICE_YUDI_EMOJI)
-                except Exception as e:
-                    print(f"Error adding reaction: {e}")
+        if after.channel:
+            # if activity to the same channel -> ignore mute, unmute, etc.
+            if before.channel == after.channel:
+                return
 
-                last_msg_id = msg.id
+            # if someone joins the voice channel -> send message
+            if after.channel.id == TARGET_VC_ID:
+
+                attendees.add(member)
+
+                # new session
+                if len(after.channel.members) == 1:
+                    other_online_members = [m.name for m in member.guild.members if m.status != discord.Status.offline and m.name != member.name]
+
+                    if len(other_online_members) == 0:
+                        title = f"Emergency war room (Organiser: {member.display_name})"
+                        color = discord.Color.red()
+                    else:
+                        title = f"Standup in progress (Manager: {manager_display_name})"
+                        color = discord.Color.green()
+
+                    session_log = f"{member.display_name} has started the session."
+
+                    embed = discord.Embed(title=title, description=embed_msg, color=color)
+                    embed.set_footer(text=session_log)
+
+                    try:
+                        msg = await text_channel.send(content=mention, embed=embed)
+                        await msg.add_reaction(ACK_EMOJI)
+                        last_msg_id = msg.id
+                    except Exception as e:
+                        print(f"Error adding reaction: {e}")
+
+                # existing session
+                elif last_msg_id:
+                    session_log += f"\n{member.display_name} joined."
+                    await update_log_embed(text_channel, title, embed_msg, color, session_log)
+
+        # someone leaves
+        elif before.channel and before.channel.id == TARGET_VC_ID:
+            if last_msg_id:
+                if first_to_leave:
+                    first_to_leave = False
+                    session_log += f"\n{member.display_name} had to step out for personal work."
+                    await update_log_embed(text_channel, title, embed_msg, color, session_log)
+                else:
+                    session_log += f"\n{member.display_name} left the call."
+                    await update_log_embed(text_channel, title, embed_msg, color, session_log)
+
+                    # if the channel is empty
+                    if len(before.channel.members) == 0:
+                        session_log += f"\nMOM to be prepared by {random.choice(attendees)} - {manager_display_name}"
+                        await update_log_embed(text_channel, title, embed_msg, discord.Color.light_grey(), session_log)
+
+                        # Reset globals for the next session
+                        last_msg_id = None
+                        session_log = ""
+                        title = ""
+                        color = None
+                        first_to_leave = True
+                        attendees = set()
+
+
+async def update_log_embed(channel, title, description, color, footer):
+    global last_msg_id, session_log
+    try:
+        msg = await channel.fetch_message(last_msg_id)
+
+        new_embed = discord.Embed(title=title, description=description, color=color)
+        new_embed.set_footer(text=footer)
+        await msg.edit(embed=new_embed)
+    except Exception as e:
+        print(f"Failed to update log: {e}")
 
 
 @bot.event
@@ -107,7 +175,7 @@ async def on_raw_reaction_add(payload):
         return
 
     # if react with emoji, send invite
-    if payload.emoji.name == NICE_YUDI_EMOJI_NAME:
+    if payload.emoji.name == ACK_EMOJI_NAME:
         channel = bot.get_channel(payload.channel_id)
         guild = bot.get_guild(payload.guild_id)
         member = guild.get_member(payload.user_id)
