@@ -108,9 +108,9 @@ async def on_voice_state_update(member, before, after):
     if text_channel:
 
         if after.channel:
-            # if activity to the same channel -> ignore mute, unmute, etc.
-            if before.channel == after.channel:
-                return
+            # # if activity to the same channel -> ignore mute, unmute, etc.
+            # if before.channel == after.channel:
+            #     return
 
             # if someone joins the voice channel -> send message
             if after.channel.id == TARGET_VC_ID:
@@ -150,6 +150,12 @@ async def on_voice_state_update(member, before, after):
                     if member not in attendees:
                         update_session_log(f"🦮 {member.display_name} joined the call.")
                         await update_log_embed(text_channel, title, embed_msg, color, session_log)
+
+                # User mutes or deaf
+                if (not before.self_mute and after.self_mute) or (not before.self_deaf and after.self_deaf):
+                    excuse = random.choice(excuses)
+                    update_session_log(f"🤓☝️ {member.display_name} had to step out due to {excuse}.")
+                    await update_log_embed(text_channel, title, embed_msg, color, session_log)
 
                 attendees.add(member)
 
