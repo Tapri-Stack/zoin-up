@@ -84,6 +84,7 @@ session_log = ""
 title = ""
 color = None
 attendees = set()
+ACTIVE = True
 
 
 # get excuses
@@ -94,7 +95,7 @@ with open(os.path.join(root, "excuses.yml"), "r") as f:
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    global last_msg_id, session_log, title, color, attendees
+    global last_msg_id, session_log, title, color, attendees, ACTIVE
 
     manager_display_name = member.guild.get_member(DUMLUCK_USER_ID).display_name
 
@@ -155,7 +156,8 @@ async def on_voice_state_update(member, before, after):
                 await update_log_embed(text_channel, title, embed_msg, color, session_log)
 
                 # if the channel is empty
-                if len(before.channel.members) == 0:
+                if ACTIVE and len(before.channel.members) == 0:
+                    ACTIVE = False
                     session_log += f"\n{manager_display_name}: MOM to be prepared by {random.choice(list(attendees))}."
                     await update_log_embed(text_channel, title, embed_msg, discord.Color.light_grey(), session_log)
 
@@ -165,6 +167,7 @@ async def on_voice_state_update(member, before, after):
                     title = ""
                     color = None
                     attendees = set()
+                    ACTIVE = True
 
 
 async def update_log_embed(channel, title, description, color, footer):
