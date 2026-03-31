@@ -84,6 +84,45 @@ color = None
 first_to_leave = True
 attendees = set()
 
+excuses = [
+    "sore throat",
+    "pickup kid from school",
+    "bank work",
+    "bank robbery",
+    "windows update",
+    "relatives visiting",
+    "grandma died",
+    "got a mail from HR",
+    "fired again",
+    "joining another meeting",
+    "wife gone missing",
+    "wife cheating",
+    "smoke break",
+    "drink break",
+    "having lunch",
+    "having three-martini lunch",
+    "stuck in production issue",
+    "executive dysfunction",
+    "midlife crisis",
+    "music lessons",
+    "cancer",
+    "internet connection",
+    "project misalignment",
+    "different life goals",
+    "scorpio sunsign (वृश्चिक राशि)",
+    "arthritis",
+    "hip replacement surgery",
+    "cataract",
+    "carpal tunnel",
+    "sunset",
+    "hangover",
+    "happy hour",
+    "chronic needs",
+    "dry fruit in pantry",
+    "protest march",
+    "bus leaving",
+]
+
 
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -115,7 +154,13 @@ async def on_voice_state_update(member, before, after):
                         title = f"Standup in progress (Manager: {manager_display_name})"
                         color = discord.Color.green()
 
-                    session_log = f"{member.display_name} has started the session."
+                    # if manager not starting the meeting
+                    if member.display_name != manager_display_name:
+                        session_log += f"{manager_display_name}: I'm running late, please continue."
+                    else:
+                        session_log += f"{manager_display_name}: (passive aggressive) Team, please join the huddle."
+
+                    session_log += f"{member.display_name} joined."
 
                     embed = discord.Embed(title=title, description=embed_msg, color=color)
                     embed.set_footer(text=session_log)
@@ -137,7 +182,8 @@ async def on_voice_state_update(member, before, after):
             if last_msg_id:
                 if first_to_leave:
                     first_to_leave = False
-                    session_log += f"\n{member.display_name} had to step out for personal work."
+                    excuse = random.choice(excuses)
+                    session_log += f"\n{member.display_name} had to step out due to {excuse}."
                     await update_log_embed(text_channel, title, embed_msg, color, session_log)
                 else:
                     session_log += f"\n{member.display_name} left the call."
