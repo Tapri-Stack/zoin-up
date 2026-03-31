@@ -74,7 +74,7 @@ embed_msg = f"""```
 ░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░
 ```"""
-mention = f"<@&{GAMER_ROLE_ID}>"
+mention = f"<@&{GAMER_ROLE_ID}> zoin up ..., or else ... 🥀"
 
 
 last_msg_id = None
