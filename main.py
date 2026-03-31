@@ -163,7 +163,7 @@ async def on_voice_state_update(member, before, after):
                 # if the channel is empty
                 if ACTIVE and len(before.channel.members) == 0:
                     ACTIVE = False
-                    update_session_log(f"👨🏻‍💼 {manager_display_name}: 📋 MOM to be prepared by {random.choice(list(attendees))}.")
+                    update_session_log(f"👨🏻‍💼 {manager_display_name}: 📋 MOM to be prepared by {random.choice(list(attendees)).display_name}.")
                     await update_log_embed(text_channel, title, embed_msg, discord.Color.light_grey(), session_log)
 
                     # Reset globals for the next session
