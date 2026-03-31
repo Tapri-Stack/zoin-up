@@ -93,6 +93,11 @@ with open(os.path.join(root, "excuses.yml"), "r") as f:
     excuses = yaml.safe_load(f)
 
 
+def update_session_log(new_log):
+    global session_log
+    session_log += f"\n{new_log}"
+
+
 @bot.event
 async def on_voice_state_update(member, before, after):
     global last_msg_id, session_log, title, color, attendees, ACTIVE
@@ -123,11 +128,11 @@ async def on_voice_state_update(member, before, after):
 
                     # if manager not starting the meeting
                     if member.display_name != manager_display_name:
-                        session_log += f"{manager_display_name}: I'm running late, please continue."
+                        update_session_log(f"👨🏻‍💼 {manager_display_name}: I'm running late, please continue.")
                     else:
-                        session_log += f"{manager_display_name}: (passive aggressive) Team, please join the huddle."
+                        update_session_log(f"👨🏻‍💼 {manager_display_name}: (passive aggressive) Team, please join the call.")
 
-                    session_log += f"\n{member.display_name} joined the call."
+                    update_session_log(f"🦮 {member.display_name} joined the call.")
 
                     embed = discord.Embed(title=title, description=embed_msg, color=color)
                     embed.set_footer(text=session_log)
@@ -143,7 +148,7 @@ async def on_voice_state_update(member, before, after):
                 elif last_msg_id:
                     # if new member joining
                     if member not in attendees:
-                        session_log += f"\n{member.display_name} joined the call."
+                        update_session_log(f"🦮 {member.display_name} joined the call.")
                         await update_log_embed(text_channel, title, embed_msg, color, session_log)
 
                 attendees.add(member)
@@ -152,13 +157,13 @@ async def on_voice_state_update(member, before, after):
         elif before.channel and before.channel.id == TARGET_VC_ID:
             if last_msg_id:
                 excuse = random.choice(excuses)
-                session_log += f"\n{member.display_name} had to step out due to {excuse}."
+                update_session_log(f"🤓☝️ {member.display_name} had to step out due to {excuse}.")
                 await update_log_embed(text_channel, title, embed_msg, color, session_log)
 
                 # if the channel is empty
                 if ACTIVE and len(before.channel.members) == 0:
                     ACTIVE = False
-                    session_log += f"\n{manager_display_name}: MOM to be prepared by {random.choice(list(attendees))}."
+                    update_session_log(f"👨🏻‍💼 {manager_display_name}: 📋 MOM to be prepared by {random.choice(list(attendees))}.")
                     await update_log_embed(text_channel, title, embed_msg, discord.Color.light_grey(), session_log)
 
                     # Reset globals for the next session
