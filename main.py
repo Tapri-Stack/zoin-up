@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import random
+import yaml
 
 # env
 load_dotenv()
@@ -82,52 +83,18 @@ last_msg_id = None
 session_log = ""
 title = ""
 color = None
-first_to_leave = True
 attendees = set()
 
-excuses = [
-    "sore throat",
-    "pickup kid from school",
-    "bank work",
-    "bank robbery",
-    "windows update",
-    "relatives visiting",
-    "grandma died",
-    "got a mail from HR",
-    "fired again",
-    "joining another meeting",
-    "wife gone missing",
-    "wife cheating",
-    "smoke break",
-    "drink break",
-    "having lunch",
-    "having three-martini lunch",
-    "stuck in production issue",
-    "executive dysfunction",
-    "midlife crisis",
-    "music lessons",
-    "cancer",
-    "internet connection",
-    "project misalignment",
-    "different life goals",
-    "scorpio sunsign (वृश्चिक राशि)",
-    "arthritis",
-    "hip replacement surgery",
-    "cataract",
-    "carpal tunnel",
-    "sunset",
-    "hangover",
-    "happy hour",
-    "chronic needs",
-    "dry fruit in pantry",
-    "protest march",
-    "bus leaving",
-]
+
+# get excuses
+root = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(root, "excuses.yml"), "r") as f:
+    excuses = yaml.safe_load(f)
 
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    global last_msg_id, session_log, title, color, first_to_leave, attendees
+    global last_msg_id, session_log, title, color, attendees
 
     manager_display_name = member.guild.get_member(DUMLUCK_USER_ID).display_name
 
@@ -181,27 +148,21 @@ async def on_voice_state_update(member, before, after):
         # someone leaves
         elif before.channel and before.channel.id == TARGET_VC_ID:
             if last_msg_id:
-                if first_to_leave:
-                    first_to_leave = False
-                    excuse = random.choice(excuses)
-                    session_log += f"\n{member.display_name} had to step out due to {excuse}."
-                    await update_log_embed(text_channel, title, embed_msg, color, session_log)
-                else:
-                    session_log += f"\n{member.display_name} left the call."
-                    await update_log_embed(text_channel, title, embed_msg, color, session_log)
+                excuse = random.choice(excuses)
+                session_log += f"\n{member.display_name} had to step out due to {excuse}."
+                await update_log_embed(text_channel, title, embed_msg, color, session_log)
 
-                    # if the channel is empty
-                    if len(before.channel.members) == 0:
-                        session_log += f"\n{manager_display_name}: MOM to be prepared by {random.choice(attendees)}."
-                        await update_log_embed(text_channel, title, embed_msg, discord.Color.light_grey(), session_log)
+                # if the channel is empty
+                if len(before.channel.members) == 0:
+                    session_log += f"\n{manager_display_name}: MOM to be prepared by {random.choice(attendees)}."
+                    await update_log_embed(text_channel, title, embed_msg, discord.Color.light_grey(), session_log)
 
-                        # Reset globals for the next session
-                        last_msg_id = None
-                        session_log = ""
-                        title = ""
-                        color = None
-                        first_to_leave = True
-                        attendees = set()
+                    # Reset globals for the next session
+                    last_msg_id = None
+                    session_log = ""
+                    title = ""
+                    color = None
+                    attendees = set()
 
 
 async def update_log_embed(channel, title, description, color, footer):
