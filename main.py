@@ -149,10 +149,10 @@ async def on_voice_state_update(member, before, after):
                     other_online_members = [m.name for m in member.guild.members if m.status != discord.Status.offline and m.name != member.name]
 
                     if len(other_online_members) == 0:
-                        title = f"EMERGENCY WAR ROOM.\nOrganiser: {member.display_name}"
+                        title = f"EMERGENCY WAR ROOM\n(Organiser: {member.display_name})"
                         color = discord.Color.red()
                     else:
-                        title = f"Standup in progress.\nManager: {manager_display_name}"
+                        title = f"Standup in progress\n(Manager: {manager_display_name})"
                         color = discord.Color.green()
 
                     # if manager not starting the meeting
@@ -175,7 +175,7 @@ async def on_voice_state_update(member, before, after):
 
                 # existing session
                 elif last_msg_id:
-                    session_log += f"\n{member.display_name} joined."
+                    session_log += f"\n{member.display_name} joined the call."
                     await update_log_embed(text_channel, title, embed_msg, color, session_log)
 
         # someone leaves
@@ -192,7 +192,7 @@ async def on_voice_state_update(member, before, after):
 
                     # if the channel is empty
                     if len(before.channel.members) == 0:
-                        session_log += f"\nMOM to be prepared by {random.choice(attendees)} - {manager_display_name}"
+                        session_log += f"\n{manager_display_name}: MOM to be prepared by {random.choice(attendees)}."
                         await update_log_embed(text_channel, title, embed_msg, discord.Color.light_grey(), session_log)
 
                         # Reset globals for the next session
