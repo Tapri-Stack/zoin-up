@@ -43,7 +43,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
     txt_ch = bot.get_channel(config.TARGET_TXT_CH_ID)
     if not txt_ch:
         return
-    manager = guild.get_member(config.USER_DUMLUCK_ID)
+    manager = guild.get_member(config.MANAGER_ID)
     if not manager:
         return
 
@@ -62,10 +62,11 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 
             # start logs
             if member.id == manager.id:
+                curr_session.add_log(f"🐍 {member.display_name} is the first one here. Good luck with that!")
                 curr_session.add_log(f"👨🏻‍💼 {manager.display_name}: (passive aggressive) Team, please join the call.")
             else:
+                curr_session.add_log(f"🦮 {member.display_name} has started the session.")
                 curr_session.add_log(f"👨🏻‍💼 {manager.display_name}: I'm running late, please continue.")
-            curr_session.add_log(f"🦮 {member.display_name} has started the session.")
 
             # Send initial message
             role = guild.get_role(config.ROLE_GAMER_ID)
@@ -87,7 +88,10 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
         # activity: joining existing session
         elif curr_session.is_active and member not in curr_session.attendees:
             curr_session.attendees.add(member)
-            curr_session.add_log(f"🦮 {member.display_name} has joined the call.")
+            if member.id == manager.id:
+                curr_session.add_log(f"🐍 {member.display_name} has blessed us. Everyone rise up!")
+            else:
+                curr_session.add_log(f"🦮 {member.display_name} has joined the call.")
             await sync()
 
     # "leave" activity on the vc
@@ -95,12 +99,17 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 
         # activity: leaving existing session
         if curr_session.is_active:
-            curr_session.add_log(f"🐕 {member.display_name} has left the call.")
+            if member.id == manager.id:
+                curr_session.add_log(f"🐍 {member.display_name} has left the call. You are permitted to sit again.")
+            else:
+                curr_session.add_log(f"🐕 {member.display_name} has left the call.")
 
             # everyone left
             if len(before.channel.members) == 0:
+                unlucky_pool = list([a for a in curr_session.attendees if a.id != manager.id])
+
                 curr_session.set_embed(color=discord.Color.light_gray())
-                curr_session.add_log(f"👨🏻‍💼 {manager.display_name}: 📋 MOM to be prepared by {random.choice(list(curr_session.attendees)).display_name}.")
+                curr_session.add_log(f"👨🏻‍💼 {manager.display_name}: 📋 MOM to be prepared by {random.choice(unlucky_pool).display_name}.")
                 await sync()
 
                 curr_session = Session()  # reset session
@@ -115,7 +124,10 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             with open(os.path.join(root, "excuses.yml"), "r") as f:
                 excuses = yaml.safe_load(f)
 
-            curr_session.add_log(f"🤓☝️ {member.display_name} had to step out due to {random.choice(excuses)}.")
+            if member.id == manager.id:
+                curr_session.add_log(f"🖕 {member.display_name} is AWOL due to correct life choices.")
+            else:
+                curr_session.add_log(f"🤓 {member.display_name} had to step out due to {random.choice(excuses)}.")
             await sync()
 
 

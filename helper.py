@@ -13,7 +13,7 @@ class Config:
     TARGET_VC_CH_ID: int = field(default_factory=lambda: int(os.getenv("TARGET_VC_CH_ID")))
     TARGET_TXT_CH_ID: int = field(default_factory=lambda: int(os.getenv("TARGET_TXT_CH_ID")))
     ROLE_GAMER_ID: int = field(default_factory=lambda: int(os.getenv("ROLE_GAMER_ID")))
-    USER_DUMLUCK_ID: int = field(default_factory=lambda: int(os.getenv("USER_DUMLUCK_ID")))
+    MANAGER_ID: int = field(default_factory=lambda: int(os.getenv("MANAGER_ID")))
     EMOJI_ACK_ID: int = field(default_factory=lambda: int(os.getenv("EMOJI_ACK_ID")))
 
     def __post_init__(self):
@@ -25,8 +25,8 @@ class Config:
             raise EnvironmentError("Environment variable not set:", self.TARGET_TXT_CH_ID)
         if not self.ROLE_GAMER_ID:
             raise EnvironmentError("Environment variable not set:", self.ROLE_GAMER_ID)
-        if not self.USER_DUMLUCK_ID:
-            raise EnvironmentError("Environment variable not set:", self.USER_DUMLUCK_ID)
+        if not self.MANAGER_ID:
+            raise EnvironmentError("Environment variable not set:", self.MANAGER_ID)
         if not self.EMOJI_ACK_ID:
             raise EnvironmentError("Environment variable not set:", self.EMOJI_ACK_ID)
 
