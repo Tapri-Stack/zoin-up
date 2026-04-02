@@ -101,15 +101,15 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
         if curr_session.is_active:
             if member.id == manager.id:
                 curr_session.add_log(f"🐍 {member.display_name} has left the call. You are permitted to sit again.")
-            else:
-                curr_session.add_log(f"🐕 {member.display_name} has left the call.")
+            # else:
+            #     curr_session.add_log(f"🐕 {member.display_name} has left the call.")
 
             # everyone left
             if len(before.channel.members) == 0:
                 unlucky_pool = list([a for a in curr_session.attendees if a.id != manager.id])
 
                 curr_session.set_embed(color=discord.Color.light_gray())
-                curr_session.add_log(f"👨🏻‍💼 {manager.display_name}: 📋 MOM to be prepared by {random.choice(unlucky_pool).display_name}.")
+                curr_session.add_log(f"👨🏻‍💼 {manager.display_name}: MOM to be prepared by {random.choice(unlucky_pool).display_name}.")
                 await sync()
 
                 curr_session = Session()  # reset session
