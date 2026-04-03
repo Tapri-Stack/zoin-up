@@ -107,12 +107,13 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             # everyone left
             if len(before.channel.members) == 0:
                 unlucky_pool = list([a for a in curr_session.attendees if a.id != manager.id])
-
+                if unlucky_pool:
+                    curr_session.add_log(f"👨🏻‍💼 {manager.display_name}: MOM to be prepared by {random.choice(unlucky_pool).display_name}.")
                 curr_session.set_embed(color=discord.Color.light_gray())
-                curr_session.add_log(f"👨🏻‍💼 {manager.display_name}: MOM to be prepared by {random.choice(unlucky_pool).display_name}.")
                 await sync()
 
-                curr_session = Session()  # reset session
+                # reset session
+                curr_session = Session()
             else:
                 await sync()
 
