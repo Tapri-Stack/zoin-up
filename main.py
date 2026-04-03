@@ -52,6 +52,8 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 
         # activity: new session
         if len(after.channel.members) == 1 and not curr_session.is_active:
+            curr_session = Session()  # reset to discard previous messages
+
             curr_session.is_active = True
             curr_session.attendees.add(member)
 
