@@ -2,7 +2,9 @@ import os
 import discord
 from dataclasses import dataclass, field
 from dotenv import load_dotenv
-from typing import Set, Optional
+from typing import List, Set, Optional
+import requests
+import yaml
 
 load_dotenv()
 
@@ -15,6 +17,7 @@ class Config:
     ROLE_GAMER_ID: int = field(default_factory=lambda: int(os.getenv("ROLE_GAMER_ID")))
     MANAGER_ID: int = field(default_factory=lambda: int(os.getenv("MANAGER_ID")))
     EMOJI_ACK_ID: int = field(default_factory=lambda: int(os.getenv("EMOJI_ACK_ID")))
+    URL_EXCUSES_YML: str = field(default_factory=lambda: os.getenv("URL_EXCUSES_YML"))
 
     def __post_init__(self):
         if not self.DISCORD_TOKEN:
@@ -29,6 +32,8 @@ class Config:
             raise EnvironmentError("Environment variable not set:", self.MANAGER_ID)
         if not self.EMOJI_ACK_ID:
             raise EnvironmentError("Environment variable not set:", self.EMOJI_ACK_ID)
+        if not self.URL_EXCUSES_YML:
+            raise EnvironmentError("Environment variable not set:", self.URL_EXCUSES_YML)
 
 
 @dataclass
@@ -88,6 +93,7 @@ class Session:
     attendees: Set[discord.Member] = field(default_factory=set)
     is_active: bool = False
     embed: Optional[discord.Embed] = None
+    _excuses: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         if self.embed is None:
@@ -102,3 +108,20 @@ class Session:
         self.log += f"\n{msg}"
         if self.embed:
             self.embed.set_footer(text=self.log)
+
+    def get_excuses(self) -> List[str]:
+        config = Config()
+
+        try:
+            response = requests.get(config.URL_EXCUSES_YML, allow_redirects=True)
+            response.raise_for_status()
+            data = yaml.safe_load(response.content)
+            self._excuses = data
+            return data
+        except Exception as e:
+            print("Failed to fetch excuses:", e)
+            if self._excuses:
+                print("Returning cached excuses.")
+                return self._excuses
+
+        return []

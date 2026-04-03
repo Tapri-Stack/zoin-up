@@ -1,9 +1,7 @@
 import asyncio
-import os
 import discord
 from discord.ext import commands
 import random
-import yaml
 from helper import Config, Session
 
 # initialise bot
@@ -122,15 +120,12 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
     # mute & deafen
     if after.channel and after.channel.id == config.TARGET_VC_CH_ID:
         if (not before.self_mute and after.self_mute) or (not before.self_deaf and after.self_deaf):
-            # get excuses from file
-            root = os.path.dirname(os.path.abspath(__file__))
-            with open(os.path.join(root, "excuses.yml"), "r") as f:
-                excuses = yaml.safe_load(f)
-
             if member.id == manager.id:
                 curr_session.add_log(f"🖕 {member.display_name} is AWOL due to correct life choices.")
             else:
-                curr_session.add_log(f"🤓 {member.display_name} had to step out due to {random.choice(excuses)}.")
+                excuses = curr_session.get_excuses()
+                excuse = random.choice(excuses) if excuses else "can't take it anymore"
+                curr_session.add_log(f"🤓 {member.display_name} had to step out due to {excuse}.")
             await sync()
 
 
