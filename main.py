@@ -16,6 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # global init
 config = Config()
 curr_session = Session()
+curr_agenda: tuple[str, discord.Member] = (None, None)
 
 
 async def sync():
@@ -33,9 +34,20 @@ async def sync():
         print(f"Failed to sync: {e}")
 
 
+async def set_session_agenda():
+    global curr_agenda
+
+    curr_session.set_embed(title=f"📋 *{curr_agenda[0]}*", color=discord.Color.random())
+    curr_session.add_log(f"🤓 {curr_agenda[1].display_name} set the meeting agenda to {curr_agenda[0]}.")
+    await sync()
+
+    # used, now reset
+    curr_agenda = (None, None)
+
+
 @bot.event
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-    global curr_session
+    global curr_session, curr_agenda
 
     guild = member.guild
     txt_ch = bot.get_channel(config.TARGET_TXT_CH_ID)
@@ -85,6 +97,10 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             except Exception as e:
                 print(f"Failed to send initial session message: {e}")
 
+            # if agenda available prior to call, set it
+            if curr_agenda != (None, None):
+                await set_session_agenda()
+
         # activity: joining existing session
         elif curr_session.is_active and member not in curr_session.attendees:
             curr_session.attendees.add(member)
@@ -125,7 +141,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             else:
                 excuses = curr_session.get_excuses()
                 excuse = random.choice(excuses) if excuses else "can't take it anymore"
-                curr_session.add_log(f"🤓 {member.display_name} had to step out due to {excuse}.")
+                curr_session.add_log(f"🙋 {member.display_name} had to step out due to {excuse}.")
             await sync()
 
 
@@ -150,6 +166,26 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         portal_msg = await txt_ch.send(f"⏳ {member.mention}, here is your session invite: {invite.url}")
         await asyncio.sleep(10)
         await portal_msg.delete()
+
+
+@bot.command(name="agenda")
+async def set_agenda(ctx, *, text: str):
+    global curr_session, curr_agenda
+
+    if curr_agenda == (None, None):
+        curr_agenda = (text, ctx.author)
+        await ctx.message.add_reaction("✅")
+        if curr_session.is_active:
+            await set_session_agenda()
+        reply = "https://media.tenor.com/-Y8fTUR6DP0AAAAM/charlie-day-charlie-kelly.gif"
+    else:
+        await ctx.message.add_reaction("❌")
+        reply = "https://i.imgflip.com/21kggt.jpg"
+
+    if random.choice([True, False]):
+        msg = await ctx.send(embed=reply)
+        await asyncio.sleep(10)
+        await msg.delete()
 
 
 bot.run(config.DISCORD_TOKEN)
