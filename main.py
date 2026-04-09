@@ -183,7 +183,7 @@ async def set_agenda(ctx, *, text: str):
         reply = "https://i.imgflip.com/21kggt.jpg"
 
     if random.choice([True, False]):
-        msg = await ctx.send(embed=reply)
+        msg = await ctx.send(content=reply)
         await asyncio.sleep(10)
         await msg.delete()
 
