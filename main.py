@@ -168,7 +168,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         await portal_msg.delete()
 
 
-@bot.command(name="agenda")
+@bot.command(name="zagenda")
 async def set_agenda(ctx, *, text: str):
     global curr_session, curr_agenda
 
