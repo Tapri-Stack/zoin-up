@@ -168,6 +168,31 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         await portal_msg.delete()
 
 
+@bot.event
+async def on_message(message: discord.Message):
+    if message.author.bot:
+        return
+
+    manager = message.guild.get_member(config.MANAGER_ID)
+    if not manager:
+        return
+
+    pm = message.guild.get_member(config.PM_ID)
+    if not pm:
+        return
+
+    content = message.content.lower()
+
+    if "team" in content:
+        await message.channel.send(f"cc {manager.mention}")
+
+    if "product" in content:
+        await message.channel.send(f"cc {pm.mention}")
+
+    # allows @bot.command() functions to still work
+    await bot.process_commands(message)
+
+
 @bot.command(name="zagenda")
 async def cmd_zagenda(ctx, *, text: str):
     global curr_session, curr_agenda
