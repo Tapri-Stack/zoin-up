@@ -11,7 +11,7 @@ intents.message_content = True
 intents.reactions = True
 intents.presences = True
 intents.members = True
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 # global init
 config = Config()
@@ -169,8 +169,11 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 
 
 @bot.command(name="zagenda")
-async def set_agenda(ctx, *, text: str):
+async def cmd_zagenda(ctx, *, text: str):
     global curr_session, curr_agenda
+
+    embed = discord.Embed(title="🎙️ Proactive communication", description="🎉 We have successfully acquired the `!agenda` command in collaboration with our SRE team (Chor Ltd.), fulfilling our last FY's KPIs.", color=discord.Color.random())
+    await ctx.send(embed=embed)
 
     if curr_agenda == (None, None):
         curr_agenda = (text, ctx.author)
@@ -186,6 +189,18 @@ async def set_agenda(ctx, *, text: str):
         msg = await ctx.send(content=reply)
         await asyncio.sleep(10)
         await msg.delete()
+
+
+@bot.command(name="zhelp")
+async def cmd_zhelp(ctx, *, text: str):
+    emoji = await ctx.guild.fetch_emoji(config.EMOJI_ACK_ID)
+    await ctx.message.add_reaction(emoji)
+
+    help_embed = discord.Embed(title="🧑‍💻 Help Desk", description="🔨We are working hard to acquire the `!help` command from competing bots. We appreciate your continued support.", color=discord.Color.random())
+    help_embed.add_field(name="`!zagenda <text>`", value="Sets the (z)agenda. Above mentioned as available below.", inline=False)
+    help_embed.add_field(name="`!zhelp`", value="You are here, welcome! Above mentioned as available below.", inline=False)
+
+    await ctx.send(embed=help_embed)
 
 
 bot.run(config.DISCORD_TOKEN)
