@@ -16,6 +16,7 @@ class Config:
     TARGET_TXT_CH_ID: int = field(default_factory=lambda: int(os.getenv("TARGET_TXT_CH_ID")))
     ROLE_GAMER_ID: int = field(default_factory=lambda: int(os.getenv("ROLE_GAMER_ID")))
     MANAGER_ID: int = field(default_factory=lambda: int(os.getenv("MANAGER_ID")))
+    PM_ID: int = field(default_factory=lambda: int(os.getenv("PM_ID")))
     EMOJI_ACK_ID: int = field(default_factory=lambda: int(os.getenv("EMOJI_ACK_ID")))
     URL_EXCUSES_YML: str = field(default_factory=lambda: os.getenv("URL_EXCUSES_YML"))
 
@@ -30,6 +31,8 @@ class Config:
             raise EnvironmentError("Environment variable not set:", self.ROLE_GAMER_ID)
         if not self.MANAGER_ID:
             raise EnvironmentError("Environment variable not set:", self.MANAGER_ID)
+        if not self.PM_ID:
+            raise EnvironmentError("Environment variable not set:", self.PM_ID)
         if not self.EMOJI_ACK_ID:
             raise EnvironmentError("Environment variable not set:", self.EMOJI_ACK_ID)
         if not self.URL_EXCUSES_YML:
@@ -38,8 +41,8 @@ class Config:
 
 @dataclass
 class Session:
-    _MESSAGE: str = "*zoin up ..., or else ...* 🥀"
-    _EMBED_TITLE: str = "🗣️ *Standup in session*"
+    _MESSAGE: str = "zoin up ..., or else ... 🥀"
+    _EMBED_TITLE: str = "🗣️ Standup in session"
     _EMBED_DESCRIPTION: str = """```
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -86,7 +89,7 @@ class Session:
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ```"""
-    _EMBED_COLOR: discord.Color = field(default_factory=lambda: discord.Color.green())
+    _EMBED_COLOR: discord.Color = field(default_factory=lambda: discord.Color.random())
 
     msg_id: Optional[int] = None
     log: str = ""

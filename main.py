@@ -11,7 +11,7 @@ intents.message_content = True
 intents.reactions = True
 intents.presences = True
 intents.members = True
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+bot = commands.Bot(command_prefix="z", intents=intents, help_command=None)
 
 # global init
 config = Config()
@@ -37,7 +37,7 @@ async def sync():
 async def set_session_agenda():
     global curr_agenda
 
-    curr_session.set_embed(title=f"📋 *{curr_agenda[0]}*", color=discord.Color.random())
+    curr_session.set_embed(title=f"📋 {curr_agenda[0]}", color=discord.Color.random())
     curr_session.add_log(f"🤓 {curr_agenda[1].display_name} set the meeting agenda to {curr_agenda[0]}.")
     await sync()
 
@@ -70,7 +70,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             others_online = any(not m.bot and m.status == discord.Status.online and m.id != member.id for m in guild.members)
 
             if not others_online:
-                curr_session.set_embed(title=f"🚨 *EMERGENCY WAR ROOM*", color=discord.Color.red())
+                curr_session.set_embed(title=f"🚨 EMERGENCY WAR ROOM", color=discord.Color.red())
 
             # start logs
             if member.id == manager.id:
@@ -100,6 +100,8 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             # if agenda available prior to call, set it
             if curr_agenda != (None, None):
                 await set_session_agenda()
+            else:
+                await txt_ch.send(content=f"Meeting agenda needs to be set, as per the leadership guidelines.")
 
         # activity: joining existing session
         elif curr_session.is_active and member not in curr_session.attendees:
@@ -183,21 +185,28 @@ async def on_message(message: discord.Message):
 
     content = message.content.lower()
 
-    if "team" in content:
+    manager_triggers = ["team", "update", "blocker", "urgent", "meeting", "standup", "emergency", "escalate", "approval", "review", "feedback", "hiring", "budget", "client", "priority", "critical", "sync", "performance", "resource", "incident"]
+
+    pm_triggers = ["deadline", "timeline", "milestone", "scope", "requirement", "jira", "roadmap", "sprint", "backlog", "eta", "delivery", "planning", "estimation", "velocity", "board", "task", "dependency", "launch", "deployment", "capacity"]
+
+    if any(word in content for word in manager_triggers):
         await message.channel.send(f"cc {manager.mention}")
 
-    if "product" in content:
+    if any(word in content for word in pm_triggers):
         await message.channel.send(f"cc {pm.mention}")
+
+    if random.randrange(10) < 1:
+        await message.channel.send(f"Please help me, I'm scared.")
 
     # allows @bot.command() functions to still work
     await bot.process_commands(message)
 
 
-@bot.command(name="zagenda")
-async def cmd_zagenda(ctx, *, text: str):
+@bot.command(name="agenda")
+async def cmd_agenda(ctx, *, text: str):
     global curr_session, curr_agenda
 
-    embed = discord.Embed(title="🎙️ Proactive communication", description="🎉 We have successfully acquired the `!agenda` command in collaboration with our SRE team (Chor Ltd.), fulfilling our last FY's KPIs.", color=discord.Color.random())
+    embed = discord.Embed(title="🎙️ Proactive communication", description="💸 We have successfully acquired the `agenda` command in collaboration with our SRE team (Chor Ltd.), fulfilling our last FY's KPIs.", color=discord.Color.random())
     await ctx.send(embed=embed)
 
     if curr_agenda == (None, None):
@@ -216,14 +225,15 @@ async def cmd_zagenda(ctx, *, text: str):
         await msg.delete()
 
 
-@bot.command(name="zhelp")
-async def cmd_zhelp(ctx, *, text: str):
+@bot.command(name="help")
+async def cmd_help(ctx, *, text: str):
     emoji = await ctx.guild.fetch_emoji(config.EMOJI_ACK_ID)
     await ctx.message.add_reaction(emoji)
 
-    help_embed = discord.Embed(title="🧑‍💻 Help Desk", description="🔨We are working hard to acquire the `!help` command from competing bots. We appreciate your continued support.", color=discord.Color.random())
-    help_embed.add_field(name="`!zagenda <text>`", value="Sets the (z)agenda. Above mentioned as available below.", inline=False)
-    help_embed.add_field(name="`!zhelp`", value="You are here, welcome! Above mentioned as available below.", inline=False)
+    help_embed = discord.Embed(title="🧑‍💻 Help Desk", description="🔨We are working hard to acquire the `help` command from competing bots. We appreciate your continued support.", color=discord.Color.random())
+    help_embed.add_field(name="`zagenda <text>`", value="Helps to set the meeting agenda.", inline=False)
+    help_embed.add_field(name="`zhelp`", value="Helps to show help for the help command.", inline=False)
+    help_embed.add_field(name="z*", value="Above mentioned as available below.", inline=False)
 
     await ctx.send(embed=help_embed)
 
