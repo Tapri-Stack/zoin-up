@@ -101,7 +101,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             if curr_agenda != (None, None):
                 await set_session_agenda()
             else:
-                msg = txt_ch.send(embed=discord.Embed(description="🚨 Meeting agenda needs to be set, as per the leadership guidelines.", color=discord.Color.red()))
+                msg = await txt_ch.send(embed=discord.Embed(description="🚨 Meeting agenda needs to be set, as per the leadership guidelines.", color=discord.Color.red()))
                 await asyncio.sleep(60)
                 await msg.delete()
 
@@ -198,7 +198,9 @@ async def on_message(message: discord.Message):
         await message.channel.send(f"cc {pm.mention}")
 
     if random.randrange(10) < 1:
-        await message.channel.send(f"Please help me, I'm scared.")
+        msg = await message.channel.send(f"Please help me, I'm trapped here.")
+        await asyncio.sleep(10)
+        await msg.delete()
 
     # allows @bot.command() functions to still work
     await bot.process_commands(message)
