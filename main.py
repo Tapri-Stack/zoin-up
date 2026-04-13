@@ -177,25 +177,21 @@ async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    manager = message.guild.get_member(config.MANAGER_ID)
-    if not manager:
-        return
-
-    pm = message.guild.get_member(config.PM_ID)
-    if not pm:
-        return
-
-    content = message.content.lower()
-
     manager_triggers = ["team", "update", "blocker", "urgent", "meeting", "standup", "emergency", "escalate", "approval", "review", "feedback", "hiring", "budget", "client", "priority", "critical", "sync", "performance", "resource", "incident"]
 
     pm_triggers = ["deadline", "timeline", "milestone", "scope", "requirement", "jira", "roadmap", "sprint", "backlog", "eta", "delivery", "planning", "estimation", "velocity", "board", "task", "dependency", "launch", "deployment", "capacity"]
 
+    content = message.content.lower()
+
     if any(word in content for word in manager_triggers):
-        await message.channel.send(f"cc {manager.mention}")
+        manager = message.guild.get_member(config.MANAGER_ID)
+        if manager:
+            await message.reply(f"cc {manager.mention}")
 
     if any(word in content for word in pm_triggers):
-        await message.channel.send(f"cc {pm.mention}")
+        pm = message.guild.get_member(config.PM_ID)
+        if pm:
+            await message.reply(f"cc {pm.mention}")
 
     if random.randrange(10) < 1:
         msg = await message.channel.send(f"Please help me, I'm trapped here.")
