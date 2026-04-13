@@ -101,7 +101,9 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             if curr_agenda != (None, None):
                 await set_session_agenda()
             else:
-                await txt_ch.send(content=f"Meeting agenda needs to be set, as per the leadership guidelines.")
+                msg = txt_ch.send(embed=discord.Embed(description="🚨 Meeting agenda needs to be set, as per the leadership guidelines.", color=discord.Color.red()))
+                await asyncio.sleep(60)
+                await msg.delete()
 
         # activity: joining existing session
         elif curr_session.is_active and member not in curr_session.attendees:
