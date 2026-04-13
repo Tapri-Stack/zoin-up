@@ -235,7 +235,6 @@ async def cmd_help(ctx, *, text: str):
     help_embed = discord.Embed(title="🧑‍💻 Help Desk", description="🔨We are working hard to acquire the `help` command from competing bots. We appreciate your continued support.", color=discord.Color.random())
     help_embed.add_field(name="`zagenda <text>`", value="Helps to set the meeting agenda.", inline=False)
     help_embed.add_field(name="`zhelp`", value="Helps to show help for the help command.", inline=False)
-    help_embed.add_field(name="z*", value="Above mentioned as available below.", inline=False)
 
     await ctx.send(embed=help_embed)
 
