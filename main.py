@@ -11,7 +11,8 @@ intents.message_content = True
 intents.reactions = True
 intents.presences = True
 intents.members = True
-bot = commands.Bot(command_prefix="z", intents=intents, help_command=None)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("z", "Z"), intents=intents, help_command=None)
+
 
 # global init
 config = Config()
