@@ -220,6 +220,10 @@ async def on_message(message: discord.Message):
 async def cmd_agenda(ctx, *, text: str):
     global curr_session, curr_agenda
 
+    if text == "":
+        embed = discord.Embed(description="Usage: `zagenda <text>", color=discord.Color.random())
+        await ctx.send(embed=embed)
+
     embed = discord.Embed(title="🎙️ Proactive communication", description="💸 We have successfully acquired the `agenda` command in collaboration with our SRE team (Chor Ltd.), fulfilling our last FY's KPIs.", color=discord.Color.random())
     await ctx.send(embed=embed)
 
@@ -240,7 +244,7 @@ async def cmd_agenda(ctx, *, text: str):
 
 
 @bot.command(name="help")
-async def cmd_help(ctx, *, text: str):
+async def cmd_help(ctx):
     emoji = await ctx.guild.fetch_emoji(config.EMOJI_ACK_ID)
     await ctx.message.add_reaction(emoji)
 
