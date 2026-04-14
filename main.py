@@ -103,8 +103,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
                 await set_session_agenda()
             else:
                 msg = await txt_ch.send(embed=discord.Embed(description="🚨 Meeting agenda needs to be set, as per the leadership guidelines.", color=discord.Color.red()))
-                await asyncio.sleep(60)
-                await msg.delete()
+                await msg.delete(delay=60)
 
         # activity: joining existing session
         elif curr_session.is_active and member not in curr_session.attendees:
@@ -169,8 +168,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     if payload.emoji.id == config.EMOJI_ACK_ID:
         invite = await vc_ch.create_invite(max_age=60, max_uses=1)
         portal_msg = await txt_ch.send(f"⏳ {member.mention}, here is your session invite: {invite.url}")
-        await asyncio.sleep(10)
-        await portal_msg.delete()
+        await portal_msg.delete(delay=10)
 
 
 @bot.event
@@ -210,8 +208,7 @@ async def on_message(message: discord.Message):
             ]
         )
         msg = await message.channel.send(embed=discord.Embed(description=reply, color=discord.Color.red()))
-        await asyncio.sleep(10)
-        await msg.delete()
+        await msg.delete(delay=10)
 
     # allows @bot.command() functions to still work
     await bot.process_commands(message)
@@ -240,8 +237,7 @@ async def cmd_agenda(ctx, *, text: str = None):
 
         if random.choice([True, False]):
             msg = await ctx.send(content=reply)
-            await asyncio.sleep(10)
-            await msg.delete()
+            await msg.delete(delay=10)
 
 
 @bot.command(name="help")
