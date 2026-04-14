@@ -223,17 +223,20 @@ async def cmd_agenda(ctx, *, text: str = None):
         await ctx.send(embed=embed)
     else:
         embed = discord.Embed(title="🎙️ Proactive communication", description="💸 We have successfully acquired the `agenda` command in collaboration with our SRE team (Chor Ltd.), fulfilling our last FY's KPIs.", color=discord.Color.random())
-        await ctx.send(embed=embed)
 
         if curr_agenda == (None, None):
             curr_agenda = (text, ctx.author)
             await ctx.message.add_reaction("✅")
+            embed.set_footer(f"{ctx.author.display_name} has set the agenda to {text}.")
             if curr_session.is_active:
                 await set_session_agenda()
             reply = "https://media.tenor.com/-Y8fTUR6DP0AAAAM/charlie-day-charlie-kelly.gif"
         else:
             await ctx.message.add_reaction("❌")
+            embed.set_footer(f"{ctx.author.display_name} can't read.")
             reply = "https://i.imgflip.com/21kggt.jpg"
+
+        await ctx.send(embed=embed)
 
         if random.choice([True, False]):
             msg = await ctx.send(content=reply)
