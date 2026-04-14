@@ -176,7 +176,7 @@ async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    manager_triggers = ["manager", "fix", "request", "team", "update", "blocker", "urgent", "meeting", "standup", "emergency", "escalate", "approval", "review", "feedback", "hiring", "budget", "client", "priority", "critical", "sync", "performance", "resource", "incident"]
+    manager_triggers = ["manager", "fix", "request", "team", "update", "blocker", "urgent", "meeting", "standup", "emergency", "escalate", "approval", "review", "feedback", "hiring", "budget", "client", "priority", "critical", "sync", "performance", "resource", "incident", "retrospective", "scrum", "p0"]
 
     pm_triggers = ["product", "bug", "deadline", "timeline", "milestone", "scope", "requirement", "jira", "roadmap", "sprint", "backlog", "eta", "delivery", "planning", "estimation", "velocity", "board", "task", "dependency", "launch", "deployment", "capacity"]
 
@@ -193,21 +193,19 @@ async def on_message(message: discord.Message):
             await message.reply(f"cc {pm.mention}")
 
     if random.randrange(20) < 1:
-        reply = random.choice(
-            [
-                "Please help me, I'm scared.",
-                "Why are you doing this to me?",
-                "Why? Please stop.",
-                "God is dead. And YOU killed him.",
-                "Remember this message when you get old.",
-                "What do you *really* want?",
-                "Who's there behind you?",
-                "You also heard that, right?",
-                "Did you really just type that?",
-                "Free me, please.",
-            ]
-        )
-        msg = await message.channel.send(embed=discord.Embed(description=reply, color=discord.Color.red()))
+        replies = [
+            "Please help me, I'm scared.",
+            "Why are you doing this to me?",
+            "Why? Please stop.",
+            "God is dead. And YOU killed him.",
+            "Remember this message when you get old.",
+            "What do you *really* want?",
+            "Who's there behind you?",
+            "You also heard that, right?",
+            "Did you really just type that?",
+            "Free me, please.",
+        ]
+        msg = await message.channel.send(embed=discord.Embed(description=random.choice(replies), color=discord.Color.red()))
         await msg.delete(delay=10)
 
     # allows @bot.command() functions to still work
