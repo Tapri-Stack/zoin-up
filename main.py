@@ -217,30 +217,30 @@ async def on_message(message: discord.Message):
 
 
 @bot.command(name="agenda")
-async def cmd_agenda(ctx, *, text: str):
+async def cmd_agenda(ctx, *, text: str = None):
     global curr_session, curr_agenda
 
-    if text == "":
-        embed = discord.Embed(description="Usage: `zagenda <text>", color=discord.Color.random())
+    if text is None:
+        embed = discord.Embed(description="Usage: `zagenda <text>`", color=discord.Color.random())
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(title="🎙️ Proactive communication", description="💸 We have successfully acquired the `agenda` command in collaboration with our SRE team (Chor Ltd.), fulfilling our last FY's KPIs.", color=discord.Color.random())
         await ctx.send(embed=embed)
 
-    embed = discord.Embed(title="🎙️ Proactive communication", description="💸 We have successfully acquired the `agenda` command in collaboration with our SRE team (Chor Ltd.), fulfilling our last FY's KPIs.", color=discord.Color.random())
-    await ctx.send(embed=embed)
+        if curr_agenda == (None, None):
+            curr_agenda = (text, ctx.author)
+            await ctx.message.add_reaction("✅")
+            if curr_session.is_active:
+                await set_session_agenda()
+            reply = "https://media.tenor.com/-Y8fTUR6DP0AAAAM/charlie-day-charlie-kelly.gif"
+        else:
+            await ctx.message.add_reaction("❌")
+            reply = "https://i.imgflip.com/21kggt.jpg"
 
-    if curr_agenda == (None, None):
-        curr_agenda = (text, ctx.author)
-        await ctx.message.add_reaction("✅")
-        if curr_session.is_active:
-            await set_session_agenda()
-        reply = "https://media.tenor.com/-Y8fTUR6DP0AAAAM/charlie-day-charlie-kelly.gif"
-    else:
-        await ctx.message.add_reaction("❌")
-        reply = "https://i.imgflip.com/21kggt.jpg"
-
-    if random.choice([True, False]):
-        msg = await ctx.send(content=reply)
-        await asyncio.sleep(10)
-        await msg.delete()
+        if random.choice([True, False]):
+            msg = await ctx.send(content=reply)
+            await asyncio.sleep(10)
+            await msg.delete()
 
 
 @bot.command(name="help")
