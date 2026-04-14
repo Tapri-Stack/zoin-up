@@ -245,8 +245,7 @@ async def cmd_agenda(ctx, *, text: str = None):
 
 @bot.command(name="help")
 async def cmd_help(ctx):
-    emoji = await ctx.guild.fetch_emoji(config.EMOJI_ACK_ID)
-    await ctx.message.add_reaction(emoji)
+    await ctx.message.add_reaction("😣")
 
     help_embed = discord.Embed(title="🧑‍💻 Help Desk", description="🔨We are working hard to acquire the `help` command from competing bots. We appreciate your continued support.", color=discord.Color.random())
     help_embed.add_field(name="`zagenda <text>`", value="Helps to set the meeting agenda.", inline=False)
