@@ -225,13 +225,13 @@ async def cmd_agenda(ctx, *, text: str = None):
         if curr_agenda == (None, None):
             curr_agenda = (text, ctx.author)
             await ctx.message.add_reaction("✅")
-            embed.set_footer(f"{ctx.author.display_name} has set the agenda to {text}.")
+            embed.set_footer(text=f"{ctx.author.display_name} has set the agenda to {text}.")
             if curr_session.is_active:
                 await set_session_agenda()
             reply = "https://media.tenor.com/-Y8fTUR6DP0AAAAM/charlie-day-charlie-kelly.gif"
         else:
             await ctx.message.add_reaction("❌")
-            embed.set_footer(f"{ctx.author.display_name} can't read.")
+            embed.set_footer(text=f"{ctx.author.display_name} can't read.")
             reply = "https://i.imgflip.com/21kggt.jpg"
 
         await ctx.send(embed=embed)
