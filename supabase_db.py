@@ -57,3 +57,7 @@ class DB:
     @query_table("agenda")
     def update_agenda_deactivate(self, table):
         return table.update({"is_active": False}).eq("is_active", True)
+
+    @query_table("server")
+    def get_server_id(self, table, name: str, id_type: str):
+        return table.select("name, id_type").eq("name", name).eq("id_type", id_type)
