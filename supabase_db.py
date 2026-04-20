@@ -40,6 +40,20 @@ class DB:
     def update_session_deactivate(self, table):
         return table.update({"is_active": False}).eq("is_active", True)
 
+    @query_table("session", lambda data: data[0]["activity"])
+    def get_session_activity(self, table):
+        return table.select("msg_id, is_active, activity").eq("is_active", True).order("created_at", desc=True).limit(1)
+
+    def get_session_active_members(self):
+        activity = self.get_session_activity()
+        members = set()
+        for entry in activity:
+            if entry["kind"] == "join":
+                members.add(entry["member_id"])
+            elif entry["kind"] == "leave":
+                members.remove(entry["member_id"])
+        return members
+
     @query_table("excuses", lambda data: data[0])
     def create_excuse(self, table, excuse: str, creator_id: int):
         return table.insert({"excuse": excuse, "creator_id": creator_id})
