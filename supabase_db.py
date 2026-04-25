@@ -48,7 +48,19 @@ class DB:
 
     @execute
     def deactivate_session(self):
-        return self._table("session").update({"is_active": False}).eq("is_active", True)
+        id = self.get_session()
+        return self._table("session").update({"is_active": False}).eq("id", id)
+
+    @execute(lambda data: data[0]["logs"])
+    def get_session_logs(self):
+        id = self.get_session()
+        return self._table("session").select("id, logs").eq("id", id)
+
+    @execute
+    def add_session_log(self, log: str):
+        id = self.get_session()
+        logs = f"{self.get_session_logs()}\n{log}"
+        return self._table("session").update({"logs": logs}).eq("id", id)
 
     # -------------------- server --------------------
 
