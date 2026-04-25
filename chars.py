@@ -57,3 +57,7 @@ CHAR_R = """
 ░░░░▀▀░░░░░░▀▀░░░░░░
 ░░░░░░░░░░░░░░░░░░░░
 """.strip("\n")
+
+
+def oblique(string: str):
+    return "".join(["𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍"[ord(char) - ord('A')] if char.isalpha() else char for char in string.upper()])
