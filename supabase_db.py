@@ -40,6 +40,10 @@ class DB:
     def update_session_deactivate(self, table):
         return table.update({"is_active": False}).eq("is_active", True)
 
+    @query_table("server", lambda data: data[0]["name"])
+    def get_server_id(self, table, name: str, kind: str):
+        return table.select("name, id_type").eq("name", name).eq("kind", kind)
+
     @query_table("session", lambda data: data[0]["activity"])
     def get_session_activity(self, table):
         return table.select("msg_id, is_active, activity").eq("is_active", True).order("created_at", desc=True).limit(1)
