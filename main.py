@@ -58,6 +58,10 @@ def dice_roll_time():
     return dice_roll(choice)
 
 
+def oblique(string: str):
+    return "".join(["𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍"[ord(char) - ord("A")] if char.isalpha() else char for char in string.upper()])
+
+
 async def embed_add_log(msg: discord.Message, log: str):
     if msg.embeds:
         embed = msg.embeds[0]
