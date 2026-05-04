@@ -5,10 +5,12 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 from supabase_db import DB
-from chars import *
+
+# -------------------- init --------------------
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+
 
 intents = discord.Intents.default()
 intents.voice_states = True
@@ -19,6 +21,8 @@ intents.members = True
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("z", "Z"), intents=intents, help_command=None)
 
 db = DB()
+
+# -------------------- helpers: voice channel activity --------------------
 
 
 def on_voice_channel(voice_state: discord.VoiceState):
@@ -49,6 +53,9 @@ def is_end_session(before: discord.VoiceState, after: discord.VoiceState):
     return is_leaving(before, after) and len(before.channel.members) == 0
 
 
+# -------------------- helpers: misc --------------------
+
+
 def dice_roll(choice):
     return random.randint(1, 6) == choice
 
@@ -60,6 +67,9 @@ def dice_roll_time():
 
 def oblique(string: str):
     return "".join(["𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍"[ord(char) - ord("A")] if char.isalpha() else char for char in string.upper()])
+
+
+# -------------------- helpers: embed updates --------------------
 
 
 async def embed_add_log(msg: discord.Message, log: str):
@@ -85,6 +95,9 @@ async def embed_update_img(msg: discord.Message, img_url: str):
         await msg.edit(embed=embed)
 
 
+# -------------------- bot functions --------------------
+
+
 @bot.event
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
     text_ch = member.guild.get_channel(db.get_server_id("text_tapri", "channel"))
@@ -93,25 +106,20 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
     msg = await text_ch.fetch_message(db.get_curr_session())
 
     if is_new_session(after):
-        title = db.get_latest_agenda()
-        if not title:
-            title = oblique("zoin up")
-
-        img_url = f'https://media.discordapp.net/stickers/{db.get_server_id("almostnice", "sticker")}.webp'
-
         embed = discord.Embed(
-            title=title,
+            title=oblique("zoin up"),
             color=discord.Color.random(),
         )
-        embed.set_image(url=img_url)
-        embed.set_thumbnail(url=img_url)
+        embed.set_image(url=f'https://media.discordapp.net/stickers/{db.get_server_id("almostnice", "sticker")}.webp')
+        embed.set_thumbnail(url=f'https://media.discordapp.net/stickers/{db.get_server_id("almostnice", "sticker")}.webp')
         embed.set_footer(text="")
-
         msg = await text_ch.send(embed=embed)
-        db.create_session(id=msg.id)
 
+        db.create_session(id=msg.id)
         db.join_call(member.id)
+
         embed_add_log(msg, oblique(f"{member.display_name} requested for a zoin up."))
+        embed_update_title(msg, db.get_latest_agenda())
 
     if is_joining(member, after):
         db.join_call(member.id)
