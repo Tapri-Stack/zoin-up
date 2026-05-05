@@ -56,7 +56,7 @@ def is_end_session(before: discord.VoiceState, after: discord.VoiceState):
 # -------------------- helpers: misc --------------------
 
 
-def dice_roll(choice):
+def dice_roll(choice: int):
     return random.randint(1, 6) == choice
 
 
@@ -72,27 +72,34 @@ def oblique(string: str):
 # -------------------- helpers: embed updates --------------------
 
 
-async def embed_add_log(msg: discord.Message, log: str):
-    if msg.embeds:
-        embed = msg.embeds[0]
-        logs = embed.footer.text + f"\n{log}"
-        embed.set_footer(logs)
-        await msg.edit(embed=embed)
+def get_msg_embed(ctx):
+    session_id = db.get_curr_session()
+    if session_id:
+        msg = ctx.fetch_message(session_id)
+        if msg.embeds:
+            return msg, msg.embeds[0]
 
 
-async def embed_update_title(msg: discord.Message, title: str):
-    if msg.embeds:
-        embed = msg.embeds[0]
-        embed.title = title
-        await msg.edit(embed=embed)
+async def embed_add_log(ctx, log: str):
+    msg, embed = get_msg_embed(ctx)
+    logs = embed.footer.text + f"\n{log}"
+    embed.set_footer(logs)
+    await msg.edit(embed=embed)
 
 
-async def embed_update_img(msg: discord.Message, img_url: str):
-    if msg.embeds:
-        embed = msg.embeds[0]
-        embed.set_image(url=img_url)
-        embed.set_thumbnail(url=img_url)
-        await msg.edit(embed=embed)
+async def embed_update_title(ctx, title: str):
+    msg, embed = get_msg_embed(ctx)
+    embed = msg.embeds[0]
+    embed.title = title
+    await msg.edit(embed=embed)
+
+
+async def embed_update_img(ctx, img_url: str):
+    msg, embed = get_msg_embed(ctx)
+    embed = msg.embeds[0]
+    embed.set_image(url=img_url)
+    embed.set_thumbnail(url=img_url)
+    await msg.edit(embed=embed)
 
 
 # -------------------- bot functions --------------------
@@ -101,9 +108,10 @@ async def embed_update_img(msg: discord.Message, img_url: str):
 @bot.event
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
     text_ch = member.guild.get_channel(db.get_server_id("text_tapri", "channel"))
+
     team_manager = member.guild.get_member(db.get_server_id("team_manager", "member"))
     product_manager = member.guild.get_member(db.get_server_id("product_manager", "member"))
-    msg = await text_ch.fetch_message(db.get_curr_session())
+    avatar = "🐍" if member.id == team_manager.id or member.id == product_manager.id else "🦮"
 
     if is_new_session(after):
         embed = discord.Embed(
@@ -118,20 +126,18 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
         db.create_session(id=msg.id)
         db.join_call(member.id)
 
-        embed_add_log(msg, oblique(f"{member.display_name} requested for a zoin up."))
-        embed_update_title(msg, db.get_latest_agenda())
+        embed_update_title(text_ch, db.get_latest_agenda())
 
     if is_joining(member, after):
         db.join_call(member.id)
-        embed_add_log(msg, oblique(f"{member.display_name} zoined."))
 
     if is_leaving(member, after):
         db.leave_call(member.id)
-        embed_add_log(msg, oblique(f"{member.display_name} left due to {db.get_random_excuse()}."))
+        embed_add_log(text_ch, oblique(f"{avatar} {member.display_name}: I'll have to drop off due to {db.get_random_excuse()}."))
 
     if is_step_out(before, after):
         db.pause_call(member.id)
-        embed_add_log(msg, oblique(f"{member.display_name} had to step out due to {db.get_random_excuse()}."))
+        embed_add_log(text_ch, oblique(f"{avatar} {member.display_name}: I have to step out due to {db.get_random_excuse()}."))
 
     if is_end_session(before):
         db.end_curr_session()
