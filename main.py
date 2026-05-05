@@ -135,3 +135,38 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 
     if is_end_session(before):
         db.end_curr_session()
+
+
+# -------------------- bot commands --------------------
+
+
+async def how_to_use(ctx, cmd_use: str):
+    await ctx.message.add_reaction("❗️")
+    embed = discord.Embed(description=f"Use: `{cmd_use}`", color=discord.Color.blue())
+    if dice_roll_time():
+        embed.set_image("https://i.imgflip.com/21kggt.jpg")
+    await ctx.reply(embed=embed)
+
+
+@bot.command(name="roll")
+async def cmd_roll(ctx, *, choice: int = None):
+    if choice is None:
+        await how_to_use(ctx, "zroll [1..6]")
+    else:
+        if dice_roll(choice):
+            await ctx.message.add_reaction("✅")
+            embed = discord.Embed(color=discord.Color.green())
+            embed.set_image("https://tenor.com/bn49Q.gif")
+            await ctx.reply(embed=embed)
+        else:
+            await ctx.message.add_reaction("❌")
+
+
+@bot.command(name="agenda")
+async def cmd_agenda(ctx, *, text: str = None):
+    if text is None:
+        await how_to_use(ctx, "zagenda [text]")
+    else:
+        db.add_agenda(text, ctx.author.id)
+        embed_update_title(ctx, text)
+        await ctx.message.add_reaction("✅")
