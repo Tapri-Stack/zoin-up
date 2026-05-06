@@ -4,12 +4,15 @@ import time
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
+from discord.utils import get
 from supabase_db import DB
 
 # -------------------- init --------------------
 
 load_dotenv()
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_TOKEN = int(os.getenv("DISCORD_TOKEN"))
+TEXT_CH = int(os.getenv("TEXT_CH"))
+VOICE_CH = int(os.getenv("VOICE_CH"))
 
 
 intents = discord.Intents.default()
@@ -26,7 +29,7 @@ db = DB()
 
 
 def on_voice_channel(voice_state: discord.VoiceState):
-    return voice_state.channel and voice_state.channel.id == db.get_server_id("voice_tapri", "channel")
+    return voice_state.channel and voice_state.channel.id == VOICE_CH
 
 
 def is_new_session(after: discord.VoiceState):
@@ -107,21 +110,21 @@ async def embed_update_img(ctx, img_url: str):
 
 @bot.event
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-    text_ch = member.guild.get_channel(db.get_server_id("text_tapri", "channel"))
-
-    team_manager = member.guild.get_member(db.get_server_id("team_manager", "member"))
-    product_manager = member.guild.get_member(db.get_server_id("product_manager", "member"))
-    avatar = "🐍" if member.id == team_manager.id or member.id == product_manager.id else "🦮"
+    guild = member.guild
+    text_ch = guild.get_channel(TEXT_CH)
+    is_manager = get(guild.roles, name="manager") in member.roles
+    is_pm = get(guild.roles, name="PM") in member.roles
+    avatar = "🐍" if is_manager or is_pm else "🦮"
 
     if is_new_session(after):
         embed = discord.Embed(
             title=oblique("zoin up"),
             color=discord.Color.random(),
         )
-        embed.set_image(url=f'https://media.discordapp.net/stickers/{db.get_server_id("almostnice", "sticker")}.webp')
-        embed.set_thumbnail(url=f'https://media.discordapp.net/stickers/{db.get_server_id("almostnice", "sticker")}.webp')
+        embed.set_image(url=f'https://media.discordapp.net/stickers/{get(guild.stickers, name="almostnice")}.webp')
+        embed.set_thumbnail(url=f'https://media.discordapp.net/stickers/{get(guild.stickers, name="almostnice")}.webp')
         embed.set_footer(text="")
-        msg = await text_ch.send(embed=embed)
+        msg = await text_ch.send(content=get(guild.roles, name="g***r").mention, embed=embed)
 
         db.create_session(id=msg.id)
         db.join_call(member.id)
@@ -132,12 +135,14 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
         db.join_call(member.id)
 
     if is_leaving(member, after):
-        db.leave_call(member.id)
-        embed_add_log(text_ch, oblique(f"{avatar} {member.display_name}: I'll have to drop off due to {db.get_random_excuse()}."))
+        excuse = db.get_random_excuse()
+        db.leave_call(excuse, member.id)
+        embed_add_log(text_ch, oblique(f"{avatar} {member.display_name}: I'll have to drop off due to {excuse}.{" You can sit now." if is_manager else ""}"))
 
     if is_step_out(before, after):
-        db.pause_call(member.id)
-        embed_add_log(text_ch, oblique(f"{avatar} {member.display_name}: I have to step out due to {db.get_random_excuse()}."))
+        excuse = db.get_random_excuse()
+        db.pause_call(excuse, member.id)
+        embed_add_log(text_ch, oblique(f"{avatar} {member.display_name}: I have to step out due to {excuse}.{" Keep standing." if is_manager else ""}"))
 
     if is_end_session(before):
         db.end_curr_session()
@@ -146,33 +151,83 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 # -------------------- bot commands --------------------
 
 
-async def how_to_use(ctx, cmd_use: str):
+def _use_str(cmd: str, args: str):
+    if len(args) > 0:
+        return f"`{cmd} [dice_roll_1..6] {args}`"
+    return f"`{cmd} [dice_roll_1..6]`"
+
+
+async def how_to_use(ctx, cmd: str, args: str):
     await ctx.message.add_reaction("❗️")
-    embed = discord.Embed(description=f"Use: `{cmd_use}`", color=discord.Color.blue())
-    if dice_roll_time():
-        embed.set_image("https://i.imgflip.com/21kggt.jpg")
+    embed = discord.Embed(description=f"Use: {_use_str(cmd, args)}", color=discord.Color.blue())
     await ctx.reply(embed=embed)
 
 
-@bot.command(name="roll")
-async def cmd_roll(ctx, *, choice: int = None):
-    if choice is None:
-        await how_to_use(ctx, "zroll [1..6]")
-    else:
-        if dice_roll(choice):
-            await ctx.message.add_reaction("✅")
-            embed = discord.Embed(color=discord.Color.green())
-            embed.set_image("https://tenor.com/bn49Q.gif")
-            await ctx.reply(embed=embed)
-        else:
-            await ctx.message.add_reaction("❌")
-
-
-@bot.command(name="agenda")
-async def cmd_agenda(ctx, *, text: str = None):
-    if text is None:
-        await how_to_use(ctx, "zagenda [text]")
-    else:
-        db.add_agenda(text, ctx.author.id)
-        embed_update_title(ctx, text)
+async def _cmd_helper(ctx, incorrect_use: bool, choice: int, cmd: str, args: str):
+    if incorrect_use:
+        await how_to_use(ctx, cmd, args)
+        return False
+    if dice_roll(choice):
         await ctx.message.add_reaction("✅")
+        return True
+    await ctx.message.add_reaction("↪🎲")
+    return False
+
+
+@bot.command(name="agenda", aliases=["AGENDA", "a", "A"])
+async def cmd_agenda(ctx, choice: int = None, agenda: str = None):
+    if await _cmd_helper(ctx, choice is None, choice, "zagenda", "[agenda]"):
+        db.add_agenda(agenda, ctx.author.id)
+        embed_update_title(ctx, agenda)
+
+
+@bot.command(name="broadcast", aliases=["BROADCAST"])
+async def cmd_broadcast(ctx, choice: int = None, message: str = None):
+    if await _cmd_helper(ctx, choice is None or message is None, choice, "broadcast", "[message]"):
+        db.add_broadcast(message, ctx.author.id)
+
+
+@bot.command(name="callout", aliases=["CALLOUT"])
+async def cmd_callout(ctx, choice: int = None, role: str = None, callout: str = None):
+    if await _cmd_helper(
+        ctx,
+        choice is None or role is None or callout is None or role.lower() not in ["manager", "pm"],
+        choice,
+        "zcallout",
+        "[manager/pm] [callout]",
+    ):
+        if role.lower() == "manager":
+            db.add_manager_callout(callout, ctx.author.id)
+        if role.lower() == "pm":
+            db.add_pm_callout(callout, ctx.author.id)
+
+
+@bot.command(name="excuse", aliases=["EXCUSE", "e", "E"])
+async def cmd_excuse(ctx, choice: int = None, excuse: str = None):
+    if await _cmd_helper(ctx, choice is None or excuse is None, choice, "zexcuse", "[excuse]"):
+        db.add_excuse(excuse, ctx.author.id)
+
+
+@bot.command(name="hallucinate", aliases=["HALLUCINATE", "hallucination", "HALLUCINATION"])
+async def cmd_hallucinate(ctx, choice: int = None, hallucination: str = None):
+    if await _cmd_helper(ctx, choice is None or hallucination is None, choice, "zhallucinate", "[hallucination]"):
+        db.add_hallucination(hallucination, ctx.author.id)
+
+
+@bot.command(name="roll", aliases=["ROLL"])
+async def cmd_roll(ctx, choice: int = None):
+    await _cmd_helper(ctx, choice is None, choice, "zroll", "")
+
+
+@bot.command(name="help", aliases=["HELP", "h", "H", "man", "MAN"])
+async def cmd_help(ctx, choice: int = None):
+    if await _cmd_helper(ctx, choice is None, choice, "zhelp", ""):
+        embed = discord.Embed(title="🧑‍💻 Help Desk", description="All commands need a successful dice roll to function.", color=discord.Color.blue())
+        embed.add_field(name=_use_str("zagenda", "[agenda]"), value="Set the meeting agenda to gain corporate aura.", inline=False)
+        embed.add_field(name=_use_str("zbroadcast", "[message]"), value="Add messages to the daily broadcast pool.", inline=False)
+        embed.add_field(name=_use_str("zcallout", "[manager/pm] [callout]"), value="Add callouts to annoy the people who haunt your dreams.", inline=False)
+        embed.add_field(name=_use_str("zexcuse", "[excuse]"), value="Excuse me?", inline=False)
+        embed.add_field(name=_use_str("zhallucinate", "[hallucination]"), value="Meow.", inline=False)
+        embed.add_field(name=_use_str("zroll", ""), value="Roll a dice to resolve arguments, decide hangouts, or make life changing decisions.", inline=False)
+        embed.add_field(name=_use_str("zhelp/zman/zh", ""), value="Helps if you want help about the help command.", inline=False)
+        await ctx.reply(embed=embed)

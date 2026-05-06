@@ -45,13 +45,6 @@ class DB:
     def end_curr_session(self):
         return self._table("session").update({"is_active": False}).eq("id", self.get_curr_session())
 
-    # -------------------- server --------------------
-
-    @cached({})
-    @execute(lambda data: data[0]["id"])
-    def get_server_id(self, name: str, kind: str):
-        return self._table("server").select("id, name, kind").eq("name", name).eq("kind", kind)
-
     # -------------------- create activity --------------------
 
     @execute
@@ -64,35 +57,26 @@ class DB:
     def add_excuse(self, excuse: str, member_id: int):
         return self._create_activity("add_excuse", excuse, member_id)
 
-    def add_message_hallucination(self, hallucination: str, member_id: int):
-        return self._create_activity("add_message_hallucination", hallucination, member_id)
-
-    def add_join_call_hallucination(self, hallucination: str, member_id: int):
-        return self._create_activity("add_join_call_hallucination", hallucination, member_id)
-
-    def add_leave_call_hallucination(self, hallucination: str, member_id: int):
-        return self._create_activity("add_leave_call_hallucination", hallucination, member_id)
-
-    def add_step_out_hallucination(self, hallucination: str, member_id: int):
-        return self._create_activity("add_step_out_hallucination", hallucination, member_id)
+    def add_hallucination(self, hallucination: str, member_id: int):
+        return self._create_activity("add_hallucination", hallucination, member_id)
 
     def join_call(self, member_id: int):
         return self._create_activity("join_call", self.get_curr_session(), member_id)
 
-    def leave_call(self, member_id: int, excuse: str):
+    def leave_call(self, excuse: str, member_id: int):
         return self._create_activity("leave_call", excuse, member_id)
 
-    def step_out(self, member_id: int, excuse: str):
+    def step_out(self, excuse: str, member_id: int):
         return self._create_activity("step_out", excuse, member_id)
 
-    def add_manager_call(self, tag: str, member_id: int):
-        return self._create_activity("add_manager_call", tag, member_id)
+    def add_manager_callout(self, callout: str, member_id: int):
+        return self._create_activity("add_manager_call", callout, member_id)
 
-    def add_pm_call(self, tag: str, member_id: int):
-        return self._create_activity("add_pm_call", tag, member_id)
+    def add_pm_callout(self, callout: str, member_id: int):
+        return self._create_activity("add_pm_call", callout, member_id)
 
-    def add_proactive_communication(self, communication: str, member_id: int):
-        return self._create_activity("add_proactive_communication", communication, member_id)
+    def add_broadcast(self, message: str, member_id: int):
+        return self._create_activity("add_broadcast", message, member_id)
 
     # -------------------- get activity --------------------
 
@@ -113,27 +97,18 @@ class DB:
     def get_random_excuse(self):
         return self._get_random_activity("add_excuse")
 
-    def get_random_message_hallucination(self):
-        return self._get_random_activity("add_message_hallucination")
+    def get_random_hallucination(self):
+        return self._get_random_activity("add_hallucination")
 
-    def get_random_join_call_hallucination(self):
-        return self._get_random_activity("add_join_call_hallucination")
-
-    def get_random_leave_call_hallucination(self):
-        return self._get_random_activity("add_leave_call_hallucination")
-
-    def get_random_step_out_hallucination(self):
-        return self._get_random_activity("add_step_out_hallucination")
-
-    def get_random_proactive_communication(self):
-        return self._get_random_activity("add_proactive_communication")
+    def get_random_broadcast(self):
+        return self._get_random_activity("add_broadcast")
 
     @cached(TTLCache(ttl=600))
-    def get_manager_calls(self):
+    def get_manager_callouts(self):
         return set([item["value"] for item in self._get_activity("add_manager_call")])
 
     @cached(TTLCache(ttl=600))
-    def get_pm_calls(self):
+    def get_pm_callouts(self):
         return set([item["value"] for item in self._get_activity("add_pm_call")])
 
     def get_joined_members(self):
