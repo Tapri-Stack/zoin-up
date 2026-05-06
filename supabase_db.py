@@ -4,7 +4,9 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 from functools import wraps
 from cachetools import cached, TTLCache
-
+from collections import defaultdict
+from datetime import datetime
+from sortedcontainers import SortedList
 
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -69,6 +71,9 @@ class DB:
     def step_out(self, excuse: str, member_id: int):
         return self._create_activity("step_out", excuse, member_id)
 
+    def join_back(self, member_id: int):
+        return self._create_activity("join_back", None, member_id)
+
     def add_manager_callout(self, callout: str, member_id: int):
         return self._create_activity("add_manager_call", callout, member_id)
 
@@ -119,3 +124,20 @@ class DB:
 
     def get_active_members(self):
         return self.get_joined_members().difference(self.get_left_members())
+
+    def get_step_out_time_period(self):
+        step_outs = defaultdict(SortedList)
+        for item in self._get_activity("step_out", self.get_curr_session()):
+            step_outs[item["member_id"]].add(item["created_at"])
+
+        join_backs = defaultdict(SortedList)
+        for item in self._get_activity("join_back", self.get_curr_session()):
+            join_backs[item["member_id"]].add(item["created_at"])
+
+        diff = defaultdict(int)
+        for member_id in join_backs.keys():
+            for t1, t2 in zip(step_outs[member_id], join_backs[member_id]):
+                diff = datetime.fromisoformat(t2) - datetime.fromisoformat(t1)
+                diff["member_id"] += diff.total_seconds()
+
+        return diff

@@ -52,6 +52,10 @@ def is_step_out(before: discord.VoiceState, after: discord.VoiceState):
     return on_voice_channel(after) and ((not before.self_mute and after.self_mute) or (not before.self_deaf and after.self_deaf))
 
 
+def is_join_back(before: discord.VoiceState, after: discord.VoiceState):
+    return on_voice_channel(after) and ((before.self_mute and not after.self_mute) or (before.self_deaf and not after.self_deaf))
+
+
 def is_end_session(before: discord.VoiceState, after: discord.VoiceState):
     return is_leaving(before, after) and len(before.channel.members) == 0
 
@@ -141,8 +145,11 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 
     if is_step_out(before, after):
         excuse = db.get_random_excuse()
-        db.pause_call(excuse, member.id)
+        db.step_out(member.id)
         embed_add_log(text_ch, oblique(f"{avatar} {member.display_name}: I have to step out due to {excuse}.{" Keep standing." if is_manager else ""}"))
+
+    if is_join_back(before, after):
+        db.join_back(member.id)
 
     if is_end_session(before):
         db.end_curr_session()
