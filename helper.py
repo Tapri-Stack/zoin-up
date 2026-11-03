@@ -19,6 +19,7 @@ class Config:
     PM_ID: int = field(default_factory=lambda: int(os.getenv("PM_ID")))
     EMOJI_ACK_ID: int = field(default_factory=lambda: int(os.getenv("EMOJI_ACK_ID")))
     URL_EXCUSES_YML: str = field(default_factory=lambda: os.getenv("URL_EXCUSES_YML"))
+    PAGER_TOPIC: str = field(default_factory=lambda: os.getenv("PAGER_TOPIC"))
 
     def __post_init__(self):
         if not self.DISCORD_TOKEN:
@@ -37,6 +38,8 @@ class Config:
             raise EnvironmentError("Environment variable not set:", self.EMOJI_ACK_ID)
         if not self.URL_EXCUSES_YML:
             raise EnvironmentError("Environment variable not set:", self.URL_EXCUSES_YML)
+        if not self.PAGER_TOPIC:
+            raise EnvironmentError("Environment variable not set:", self.PAGER_TOPIC)
 
 
 @dataclass
