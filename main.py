@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import random
 from helper import Config, Session
+import requests
 
 # initialise bot
 intents = discord.Intents.default()
@@ -104,6 +105,18 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             else:
                 msg = await txt_ch.send(embed=discord.Embed(description="🚨 Meeting agenda needs to be set, as per the leadership guidelines.", color=discord.Color.red()))
                 await msg.delete(delay=60)
+
+            # Send ntfy.sh pager alert
+            try:
+                requests.post(f"https://ntfy.sh/{config.PAGER_TOPIC}", 
+                              data="🚨 EMERGENCY WAR ROOM".encode(encoding='utf-8')
+                              headers={
+                                      "Title": "Zoin-up on Lan Party",
+                                      "Priority": "max",
+                                      "Tags": "rotating_light"
+                              })
+            except Exception as e:
+                print(f"Failed to send pager alert: {e}")
 
         # activity: joining existing session
         elif curr_session.is_active and member not in curr_session.attendees:
